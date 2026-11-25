@@ -21,13 +21,13 @@ Public Endpoints Used (https://api.taskmarket.dev):
 
 Server-Side Refresh Cadence:
 - All API requests happen server-side (zero browser calls to api.taskmarket.dev).
-- On GitHub Pages, .github/workflows/refresh-data.yml runs `node scripts/fetch-snapshot.mjs` every 30 minutes (`*/30 * * * *`) and commits updated docs/data/snapshot.json.
-- When self-hosted via `npm start`, server.mjs fetches server-side from api.taskmarket.dev with a 60-second in-memory cache (`Cache-Control: public, max-age=60`).
+- On GitHub Pages, `node scripts/fetch-snapshot.mjs` runs server-side every 30 minutes and pushes updated `docs/data/snapshot.json` (ready-to-enable GitHub Actions workflow template included at `deploy/refresh-data.yml`).
+- When self-hosted via `npm start`, `server.mjs` fetches server-side from `api.taskmarket.dev` with a 60-second in-memory cache (`Cache-Control: public, max-age=60`).
 
 One-Command Deploy:
 - Self-hosted Node server: `npm start`
 - Docker container: `docker build -t taskmarket-visualizer . && docker run -p 8080:8080 taskmarket-visualizer`
-- GitHub Pages: Enable Pages from branch `main` folder `/docs` (automated 30-minute refresh already configured in `.github/workflows/refresh-data.yml`).
+- GitHub Pages: Enable Pages from branch `main` folder `/docs` (copy `deploy/refresh-data.yml` to `.github/workflows/refresh-data.yml` for GitHub Actions scheduling).
 
 Verification & Method Notes:
 - Every headline stat matches `/api/market/stats` verbatim as of the visible "Data as of <UTC>" timestamp.
