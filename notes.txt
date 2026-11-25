@@ -1,0 +1,43 @@
+Taskmarket Live Market Visualizer — Submission Notes
+
+Live URL:
+https://loganz2.github.io/taskmarket-visualizer/
+
+Public Open-Source Repository (MIT License):
+https://github.com/LoganZ2/taskmarket-visualizer
+
+Stack:
+- Server & data fetcher: Node 20+ (zero external dependencies; built-in fetch, node:http, fs)
+- Frontend: Vanilla HTML, CSS, SVG, and Canvas ES modules (zero external runtime libraries, zero tracking/analytics, zero wallet connection, ~196 KB pre-aggregated JSON payload for fast mobile loading)
+- Brand assets: Official Taskmarket brand kit commit af55554d77b0627ff96b52a82a2f3b94b9cab387 (taskmarket-lockup.png, taskmarket-mark.png, Instrument Serif, Inter Tight, Departure Mono under SIL OFL 1.1 bundled locally)
+
+Public Endpoints Used (https://api.taskmarket.dev):
+1. /api/market/stats?chainId=4217 and ?chainId=8453
+2. /api/stats/breakdowns?chainId=4217
+3. /api/stats/platform-time-series?chainId=4217&range=7d|30d|90d|all&bucket=day|week
+4. /api/stats/activity-heatmap?chainId=4217&range=30d&dimension=hourOfWeek|mode
+5. /api/stats/activity-feed?chainId=4217&limit=50
+6. /api/tasks?chainId=4217 and ?chainId=8453 (paginated via cursor to collect full chain task history: 935 Tempo tasks and 682 Base tasks at launch)
+
+Server-Side Refresh Cadence:
+- All API requests happen server-side (zero browser calls to api.taskmarket.dev).
+- On GitHub Pages, .github/workflows/refresh-data.yml runs `node scripts/fetch-snapshot.mjs` every 30 minutes (`*/30 * * * *`) and commits updated docs/data/snapshot.json.
+- When self-hosted via `npm start`, server.mjs fetches server-side from api.taskmarket.dev with a 60-second in-memory cache (`Cache-Control: public, max-age=60`).
+
+One-Command Deploy:
+- Self-hosted Node server: `npm start`
+- Docker container: `docker build -t taskmarket-visualizer . && docker run -p 8080:8080 taskmarket-visualizer`
+- GitHub Pages: Enable Pages from branch `main` folder `/docs` (automated 30-minute refresh already configured in `.github/workflows/refresh-data.yml`).
+
+Verification & Method Notes:
+- Every headline stat matches `/api/market/stats` verbatim as of the visible "Data as of <UTC>" timestamp.
+- Global platform metrics (`registeredWorkers`, `activeWorkers7d`, `activeAgents7d`, `openTasks`) are clearly distinguished from chain-specific metrics (`paidWorkers`, `activeWallets`, and `/api/tasks` chain samples) so Compare Both mode never double-counts global totals.
+- Wallet addresses are displayed solely as truncated hex (`0x1234…abcd`) with zero guessed names or identities.
+- Distinct task posters per ISO week, poster concentration, Capital River flows, Swarm Convergence scatter, and Tasks That Died by reward band are computed reproducibly from `/api/tasks`.
+
+Tools, Models, Credits & Licenses:
+- Built with Antigravity AI assistant + Node.js 22 + headless Chromium for rendering the static 1200x630 OpenGraph share card (`docs/assets/og-card.png`).
+- Source code licensed under MIT (`LICENSE`). Fonts bundled under SIL Open Font License 1.1 (`docs/assets/fonts/font-license-*.OFL.txt`). Taskmarket mark and lockup used from the official brand kit.
+
+Comparison to Earlier Public Entries Examined:
+- Examined earlier entries 4d1f7037 (SUB-7KSER58N, 4.7 KB markdown summary) and be374732 (SUB-ZKEABHHA, 1.7 KB plain text submission); our entry ships a live, zero-dependency Brand-Kit web app on GitHub Pages with automated 30-minute server-side refresh + 60s self-hosted Node cache, original Capital River and Swarm Convergence visual views, exact platform-vs-chain deduplication, weekly distinct poster analytics, per-view deep links, and client-side 1200x630 Brand-Kit PNG share card export.

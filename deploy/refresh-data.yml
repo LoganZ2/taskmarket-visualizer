@@ -1,0 +1,39 @@
+name: Refresh Taskmarket Market Data
+
+on:
+  schedule:
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/fetch-snapshot.mjs'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: refresh-data
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Fetch live Taskmarket API snapshot (Tempo 4217 + Base 8453)
+        run: node scripts/fetch-snapshot.mjs
+      - name: Commit updated snapshot if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if ! git diff --quiet docs/data/snapshot.json; then
+            git add docs/data/snapshot.json
+            git commit -m "chore(data): refresh live market snapshot $(date -u +%Y-%m-%dT%H:%MZ)"
+            git push
+          else
+            echo "Snapshot unchanged."
+          fi

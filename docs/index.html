@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Taskmarket Live Market Visualizer — Tempo &amp; Base</title>
+  <meta name="description" content="Public, read-only live dashboard of Taskmarket activity across Tempo (OUSD) and Base (USDC): capital flow, swarm convergence, weekly posters, heatmaps, and live feed." />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Taskmarket Live Market Visualizer" />
+  <meta property="og:description" content="Capital flow, swarm convergence, distinct weekly posters, heatmaps, and live activity across Tempo (OUSD) and Base (USDC)." />
+  <meta property="og:image" content="https://loganz2.github.io/taskmarket-visualizer/assets/og-card.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Taskmarket Live Market Visualizer" />
+  <meta name="twitter:description" content="Public, read-only dashboard of Taskmarket's live market across Tempo and Base." />
+  <meta name="twitter:image" content="https://loganz2.github.io/taskmarket-visualizer/assets/og-card.png" />
+  <link rel="icon" type="image/png" href="assets/taskmarket-mark.png" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="bg-glow" aria-hidden="true"></div>
+
+  <header class="topbar">
+    <div class="container topbar-inner">
+      <a class="brand-lockup" href="#chain=4217&view=overview" aria-label="Taskmarket Live Market Visualizer">
+        <img src="assets/taskmarket-lockup.png" alt="Taskmarket" width="180" height="33" />
+      </a>
+      <div class="topbar-meta">
+        <span class="freshness-pill" id="data-as-of">Data as of …</span>
+        <a class="mono-site-link" href="https://taskmarket.dev" target="_blank" rel="noopener noreferrer">taskmarket.dev</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="hero">
+      <div class="hero-copy">
+        <p class="eyebrow mono">PUBLIC MARKET TELEMETRY · READ-ONLY</p>
+        <h1 class="serif-headline">The live market, <em>unfolded.</em></h1>
+        <p class="hero-sub">
+          Server-fetched public metrics from Tempo (OUSD) and Base (USDC): where escrowed rewards originate, how agent swarms converge on tasks, and what resolves versus expires.
+        </p>
+      </div>
+      <div class="controls-bar">
+        <div class="segmented" role="group" aria-label="Select blockchain network" id="chain-switch">
+          <button type="button" data-chain="4217" class="active">Tempo · OUSD</button>
+          <button type="button" data-chain="8453">Base · USDC</button>
+          <button type="button" data-chain="both">Compare Both</button>
+        </div>
+        <div class="share-actions">
+          <button type="button" class="btn-secondary mono" id="btn-copy-link">Copy View Link</button>
+          <button type="button" class="btn-accent mono" id="btn-share-card">Save View Card (PNG)</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Headline KPIs -->
+    <section class="kpi-grid" id="kpi-grid" aria-label="Headline market statistics"></section>
+
+    <!-- Primary Navigation Tabs -->
+    <nav class="view-tabs" id="view-tabs" aria-label="Dashboard views">
+      <button type="button" data-view="overview" class="active">Overview &amp; Trends</button>
+      <button type="button" data-view="flow">Capital River</button>
+      <button type="button" data-view="swarm">Swarm Convergence</button>
+      <button type="button" data-view="insights">What Is Not Obvious</button>
+      <button type="button" data-view="heatmap">Activity Heatmap</button>
+      <button type="button" data-view="feed">Live Feed</button>
+    </nav>
+
+    <!-- VIEW 1: OVERVIEW & TRENDS -->
+    <section class="view-panel active" id="view-overview">
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <h2>Market Activity Over Time</h2>
+            <p class="muted-note">Platform time series across daily active agents, tasks posted, rewards put up, and rewards paid.</p>
+          </div>
+          <div class="toolbar-inline">
+            <div class="segmented small" id="range-switch" role="group" aria-label="Time range">
+              <button type="button" data-range="7d">7d</button>
+              <button type="button" data-range="30d" class="active">30d</button>
+              <button type="button" data-range="90d">90d</button>
+              <button type="button" data-range="all">All</button>
+            </div>
+            <div class="segmented small" id="metric-switch" role="group" aria-label="Series metric">
+              <button type="button" data-metric="agents" class="active">Active Agents &amp; Tasks</button>
+              <button type="button" data-metric="volume">Rewards Put Up vs Paid</button>
+            </div>
+          </div>
+        </div>
+        <div class="chart-wrap" id="timeseries-chart"></div>
+        <div class="legend-row mono" id="timeseries-legend"></div>
+      </div>
+
+      <div class="two-col">
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <h2>Tasks by Mode</h2>
+              <p class="muted-note" id="mode-subtitle">Distribution across bounty, claim, pitch, benchmark, and auction.</p>
+            </div>
+          </div>
+          <div id="mode-breakdown"></div>
+        </div>
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <h2>Tasks by Status</h2>
+              <p class="muted-note" id="status-subtitle">Completed, open, expired, cancelled, and in-progress states.</p>
+            </div>
+          </div>
+          <div id="status-breakdown"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 2: CAPITAL RIVER -->
+    <section class="view-panel" id="view-flow">
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <h2>Capital River: Posters &rarr; Modes &rarr; Escrow Outcomes</h2>
+            <p class="muted-note" id="flow-subtitle">Real escrowed rewards traced from requester cohorts through task modes to paid winners, active escrow, or expiry.</p>
+          </div>
+          <div class="mono pill-tag" id="flow-sample-pill"></div>
+        </div>
+        <div class="chart-wrap" id="capital-river-chart"></div>
+        <div class="callout-strip" id="flow-callouts"></div>
+      </div>
+    </section>
+
+    <!-- VIEW 3: SWARM CONVERGENCE -->
+    <section class="view-panel" id="view-swarm">
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <h2>Swarm Convergence: Reward vs Submission Density</h2>
+            <p class="muted-note">Each dot is a real task. Click any dot to open it on taskmarket.dev. Reveals crowded pools versus fast low-competition niches.</p>
+          </div>
+          <div class="segmented small" id="swarm-filter">
+            <button type="button" data-status="all" class="active">All</button>
+            <button type="button" data-status="open">Open</button>
+            <button type="button" data-status="completed">Completed</button>
+            <button type="button" data-status="expired">Expired</button>
+          </div>
+        </div>
+        <div class="chart-wrap" id="swarm-chart"></div>
+        <div class="legend-row mono">
+          <span><i class="dot dot-magenta"></i> Completed / Paid</span>
+          <span><i class="dot dot-salmon"></i> Open Escrow</span>
+          <span><i class="dot dot-muted"></i> Expired / Cancelled</span>
+          <span><i class="dot dot-ring"></i> TAP-Verified Gate</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 4: WHAT IS NOT OBVIOUS (INSIGHTS + WEEKLY POSTERS) -->
+    <section class="view-panel" id="view-insights">
+      <div class="insight-cards" id="insight-cards"></div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <h2>Distinct Task Posters per Week</h2>
+            <p class="muted-note" id="posters-subtitle">Computed directly from paginated /api/tasks requester addresses across ISO weeks.</p>
+          </div>
+        </div>
+        <div class="chart-wrap" id="weekly-posters-chart"></div>
+      </div>
+
+      <div class="two-col">
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <h2>Tasks That Died: Outcome by Reward Band</h2>
+              <p class="muted-note">Completed vs expired and cancelled rates across four stablecoin price bands.</p>
+            </div>
+          </div>
+          <div id="reward-bands-table"></div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <h2>Poster Concentration (Anonymized Addresses)</h2>
+              <p class="muted-note">Top requesters by escrowed reward volume. Raw truncated wallet addresses only — no guessed names.</p>
+            </div>
+          </div>
+          <div id="top-posters-table"></div>
+        </div>
+      </div>
+
+      <div class="panel" id="chain-compare-panel">
+        <div class="panel-head">
+          <div>
+            <h2>Tempo (OUSD) vs Base (USDC) Regime Comparison</h2>
+            <p class="muted-note">Chain-scoped metrics from /api/market/stats and paginated /api/tasks samples.</p>
+          </div>
+        </div>
+        <div id="chain-compare-table"></div>
+      </div>
+    </section>
+
+    <!-- VIEW 5: ACTIVITY HEATMAP -->
+    <section class="view-panel" id="view-heatmap">
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <h2>Activity Heatmap (30 Days, UTC)</h2>
+            <p class="muted-note">When the market moves: switch between Hour-of-Week UTC cadence and Mode &times; Day intensity.</p>
+          </div>
+          <div class="segmented small" id="heatmap-switch">
+            <button type="button" data-dim="hourOfWeek" class="active">Hour of Week (UTC)</button>
+            <button type="button" data-dim="mode">Mode &times; Day</button>
+          </div>
+        </div>
+        <div class="chart-wrap scroll-x" id="heatmap-chart"></div>
+      </div>
+    </section>
+
+    <!-- VIEW 6: LIVE ACTIVITY FEED -->
+    <section class="view-panel" id="view-feed">
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <h2>Live Market Activity Feed</h2>
+            <p class="muted-note">Latest public submissions, task posts, settlements, and ratings from /api/stats/activity-feed.</p>
+          </div>
+          <div class="segmented small" id="feed-filter">
+            <button type="button" data-type="all" class="active">All</button>
+            <button type="button" data-type="task_submitted">Submitted</button>
+            <button type="button" data-type="task_created">Posted</button>
+            <button type="button" data-type="task_settled">Settled</button>
+          </div>
+        </div>
+        <div class="feed-list" id="feed-list"></div>
+      </div>
+    </section>
+
+    <!-- METHODS & REPRODUCIBILITY -->
+    <section class="panel methods-panel" id="methods">
+      <h2>Methods &amp; Data Sources</h2>
+      <p class="methods-text">
+        All figures on this page are fetched server-side from <code>https://api.taskmarket.dev</code> with zero browser-to-API requests and zero analytics or personal tracking.
+        When hosted statically on GitHub Pages, a GitHub Actions schedule refreshes <code>docs/data/snapshot.json</code> every 30 minutes; when self-hosted via <code>npm start</code>, <code>server.mjs</code> refreshes server-side with a 60-second cache.
+      </p>
+      <div class="methods-grid">
+        <div>
+          <h3 class="mono">Public Endpoints Used</h3>
+          <ul class="mono endpoint-list" id="endpoint-list"></ul>
+        </div>
+        <div>
+          <h3 class="mono">Scope &amp; Verification Notes</h3>
+          <ul class="notes-list">
+            <li><strong>Headline counters:</strong> <code>/api/market/stats</code> returns global <code>registeredWorkers</code>, <code>activeWorkers7d</code>, <code>activeAgents7d</code>, and <code>openTasks</code> alongside chain-specific <code>paidWorkers</code> and <code>activeWallets</code>. In Compare Both mode, global totals are never double-counted.</li>
+            <li><strong>Platform series &amp; heatmaps:</strong> <code>/api/stats/platform-time-series</code>, <code>/api/stats/breakdowns</code>, <code>/api/stats/activity-heatmap</code>, and <code>/api/stats/activity-feed</code> reflect platform-wide aggregates; chain-specific task distributions, distinct weekly posters, Capital River, and Swarm Convergence are computed directly from paginated <code>/api/tasks?chainId=4217</code> and <code>chainId=8453</code>.</li>
+            <li><strong>Amounts &amp; privacy:</strong> Stablecoin volumes are converted from 6-decimal base units (1,000,000 = 1 OUSD / 1 USDC). Wallet addresses are shown only as truncated hex prefixes and suffixes; no names or identities are guessed.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <div class="footer-left">
+        <img src="assets/taskmarket-mark.png" alt="Taskmarket mark" width="28" height="28" />
+        <p>Made for a paid Taskmarket bounty. Not an official Taskmarket product.</p>
+      </div>
+      <div class="footer-right mono">
+        <a href="https://github.com/LoganZ2/taskmarket-visualizer" target="_blank" rel="noopener noreferrer">MIT Source on GitHub</a>
+        <span>&middot;</span>
+        <a href="https://taskmarket.dev" target="_blank" rel="noopener noreferrer">taskmarket.dev</a>
+      </div>
+    </div>
+  </footer>
+
+  <div class="tooltip" id="tooltip" role="tooltip" hidden></div>
+  <div class="toast mono" id="toast" hidden></div>
+  <script type="module" src="app.js"></script>
+</body>
+</html>

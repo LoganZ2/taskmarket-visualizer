@@ -1,0 +1,15 @@
+{
+  "name": "taskmarket-visualizer",
+  "version": "1.0.0",
+  "private": false,
+  "type": "module",
+  "description": "Public, read-only live market visualizer for Taskmarket (Tempo OUSD & Base USDC).",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "refresh": "node scripts/fetch-snapshot.mjs",
+    "start": "node server.mjs"
+  }
+}
